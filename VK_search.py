@@ -3,6 +3,14 @@ import requests
 from pprint import pprint
 
 def get_people(city, sex, age_from, age_to):
+    """
+    Функция возвращает людей по заданным параметрам
+    :param city: Город
+    :param sex: пол
+    :param age_from: возраст от
+    :param age_to: возраст до
+    :return: список с выборкой
+    """
     result = []
     url_search = 'https://api.vk.com/method/users.search'
     version_api_vk = '5.131'
