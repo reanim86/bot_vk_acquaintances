@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/bot_vk_acquaintances.iml" filepath="$PROJECT_DIR$/.idea/bot_vk_acquaintances.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/VKbot.iml" filepath="$PROJECT_DIR$/.idea/VKbot.iml" />
     </modules>
   </component>
 </project>
