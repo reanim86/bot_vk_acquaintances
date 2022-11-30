@@ -5,10 +5,12 @@ from random import randrange
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.upload import VkUpload
-from VK_search import get_user_info, get_people, messages_search
+from VK_search import get_user_info, get_people
 import requests
 from io import BytesIO
 import re
+from datetime import datetime as dt
+
 
 config = configparser.ConfigParser()
 config.read('token.ini')
@@ -84,6 +86,7 @@ def main_bot():
 	# Словарь с вспомогательными ответами. Вторым значением в списке указывать нужные кнопки.
 	request_dict = {
 		'давай закончим': ["До скорых встреч", None],
+		'стоп': ["Надеюсь вам понравилось)) возвращайтесь скорей", None],
 		'заданными параметрами': [
 			'Введи параметры поиска в формате:\n'
 			r'\Город\Пол\Возраст ОТ\Возраст ДО''\n'
@@ -92,7 +95,8 @@ def main_bot():
 			'1-женский\n '
 			'2-мужской\n '
 			'0-любой \n'
-			'Выбери как будем искать', None],
+			'ВНИМАНИЕ! Если будет введен пол отличный от указанных чисел, поиск будет осуществляться без пола.',
+			None],
 		'help': [
 			'Я бот который поможет найти друзей или пару.\n'
 			'Персонализированный поиск найдет сверстника(сверстницу) из вашего города противоположного пола.\n'
@@ -109,30 +113,47 @@ def main_bot():
 	}
 	pattern_param_search = r'\\(\D*)\\(\d)\\(\d*)\\(\d*)'  # Регулярка которая разбирает формат поиска по параметрам
 	search_result = None
-	message_id = None
+	# message_id = None  # Пока id сообщения не нужен
 	city = None
 	sex = None
 	age_from = None
 	age_to = None
 	offset = 20
 	for event in longpoll.listen():
-		user_id = event.peer_id
 		if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+			user_id = event.user_id
 			request = event.text.lower()
 			find_param_search = re.search(pattern_param_search, request)
 			try:
-
 				if request == "персонализированный":
-					message_id = event.message_id
+					# message_id = event.message_id  # id сообщения пока не нужен
 					write_msg(user_id, 'Сейчас найдем ...')
-					search_result = get_user_info(user_id)
-					result = search_result.pop(0)
-					write_msg(
-						user_id,
-						[result.get('name'), '\n', result.get('url')],
-						keyboard_answer.get_keyboard(),
-						[upload_photo(photo) for photo in result.get('photo')]
-					)
+					user_info = get_user_info(user_id)
+					try:
+						city = user_info[1]
+						age_from = dt.today().year - int(user_info[2][-4:])
+						age_to = age_from
+						if user_info[3] == 1:
+							sex = 2
+						elif user_info[3] == 2:
+							sex = 1
+						else:
+							sex = None
+						search_result = get_people(city, age_from, age_to, sex, offset=offset)
+						print(search_result)
+						result = search_result.pop(0)
+						write_msg(
+							user_id,
+							[result.get('name'), '\n', result.get('url')],
+							keyboard_answer.get_keyboard(),
+							[upload_photo(photo) for photo in result.get('photo')]
+						)
+					except Exception as error:
+						print(error)  # здесь можно залогировать ошибки или отбирать пользователей с закрытой страницей
+						write_msg(
+							user_id,
+							'Ваша страница закрыта. Откройте страницу для поиска или воспользуйтесь поиском по параметрам\n',
+							keyboard=keyboard_welcome.get_keyboard())
 				elif request in ['like', 'dislike']:  # Отклик на лайк и дислайк
 					result = search_result.pop(0)
 					write_msg(
@@ -144,24 +165,14 @@ def main_bot():
 				elif request == "продолжаем":  # Продолжение поиска. Происходит смещение результатов поиска
 					write_msg(user_id, 'Продолжаю поиск...')
 					offset += 20  # Смещаем поиск на следующие 20 людей
-					if messages_search(user_id, message_id) == "персонализированный":  # Проверяем последний формат поиска
-						search_result = get_user_info(user_id, offset=offset)
-						result = search_result.pop(0)
-						write_msg(
-							user_id,
-							[result.get('name'), '\n', result.get('url')],
-							keyboard_answer.get_keyboard(),
-							[upload_photo(photo) for photo in result.get('photo')]
-						)
-					else:
-						search_result = get_people(city, age_from, age_to, sex, offset)
-						result = search_result.pop(0)
-						write_msg(
-							user_id,
-							[result.get('name'), '\n', result.get('url')],
-							keyboard_answer.get_keyboard(),
-							[upload_photo(photo) for photo in result.get('photo')]
-						)
+					search_result = get_people(city, age_from, age_to, sex, offset=offset)
+					result = search_result.pop(0)
+					write_msg(
+						user_id,
+						[result.get('name'), '\n', result.get('url')],
+						keyboard_answer.get_keyboard(),
+						[upload_photo(photo) for photo in result.get('photo')]
+					)
 				elif request in list(request_dict.keys()):
 					write_msg(
 						user_id,
@@ -174,13 +185,20 @@ def main_bot():
 					age_from = find_param_search.group(3)
 					age_to = find_param_search.group(4)
 					search_result = get_people(city, age_from, age_to, sex, offset=offset)
-					result = search_result.pop(0)
-					write_msg(
-						user_id,
-						[result.get('name'), '\n', result.get('url')],
-						keyboard_answer.get_keyboard(),
-						[upload_photo(photo) for photo in result.get('photo')]
-					)
+					if search_result:
+						result = search_result.pop(0)
+						write_msg(
+							user_id,
+							[result.get('name'), '\n', result.get('url')],
+							keyboard_answer.get_keyboard(),
+							[upload_photo(photo) for photo in result.get('photo')]
+						)
+					else:
+						write_msg(
+							user_id,
+							f'Неверный формат сообщения для поиска или ошибка в запросе\n\n'
+							f'{request_dict.get("заданными параметрами")[0]}',
+						)
 				else:
 					write_msg(
 						user_id,
@@ -189,11 +207,12 @@ def main_bot():
 					)
 			except IndexError:
 				write_msg(user_id, 'Продолжаем поиск?', keyboard=keyboard_YN.get_keyboard())
-			except AttributeError:
+			except vk_api.exceptions.ApiError:
 				write_msg(
 					user_id,
-					'Ваша страница закрыта. Откройте страницу для поиска или воспользуйтесь поиском по параметрам\n',
-					keyboard=keyboard_welcome.get_keyboard())
+					'Что то пошло не так. Попробуй заново или командой HELP',
+					keyboard_help.get_keyboard()
+				)
 
 
 if __name__ == '__main__':
