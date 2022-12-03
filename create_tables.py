@@ -7,7 +7,7 @@ import psycopg2
 
 with psycopg2.connect(database="vkinder2022",
                       user="postgres",
-                      password="") as conn:
+                      password="Vu293893") as conn:
     with conn.cursor() as cur:
         
         # Перед повторным запуском кода необходимо разкомментировать:
@@ -16,7 +16,7 @@ with psycopg2.connect(database="vkinder2022",
         # DROP TABLE dislikes;
         # DROP TABLE likes;
         # DROP TABLE requests;
-        # DROP TABLE searchers;
+        
         # """)
 
         cur.execute("""
@@ -24,37 +24,23 @@ with psycopg2.connect(database="vkinder2022",
         searchers
         (
             searcherID SERIAL PRIMARY KEY NOT NULL,
-            vk_id INTEGER NOT NULL UNIQUE,
-            searcher_name VARCHAR(40),
-            searcher_surname VARCHAR(40),
-            searcher_birth_year INTEGER,
-            city VARCHAR(40),
-            link VARCHAR,
-            searcher_photo1_link VARCHAR,
-            searcher_photo2_link VARCHAR,
-            searcher_photo3_link VARCHAR);
+            vk_id INTEGER NOT NULL UNIQUE);
         
         CREATE TABLE IF NOT EXISTS 
         requests
         (
             requestID SERIAL PRIMARY KEY NOT NULL,
-            date_time TIMESTAMPTZ NOT NULL,
-            searcher_id INTEGER NOT NULL REFERENCES searchers(searcherID),
-            gender VARCHAR(10) NOT NULL,
-            city VARCHAR(40) NOT NULL,
-            birth_year INTEGER NOT NULL);
+            date_time TIMESTAMP,
+            searcher_id INTEGER NOT NULL REFERENCES searchers(searcherID));
             
         CREATE TABLE IF NOT EXISTS 
         likes
         (
             likeID SERIAL PRIMARY KEY NOT NULL,
-            request_id INTEGER NOT NULL REFERENCES requests(requestID),
             searcher_id INTEGER NOT NULL REFERENCES searchers(searcherID),
-            vk_id INTEGER NOT NULL UNIQUE,
+            user_vkid INTEGER UNIQUE,
             name VARCHAR(40),
             surname VARCHAR(40),
-            birth_year INTEGER,
-            city VARCHAR(40),
             link VARCHAR,
             photo1_link VARCHAR,
             photo2_link VARCHAR,
@@ -64,11 +50,11 @@ with psycopg2.connect(database="vkinder2022",
         dislikes
         (
             dislikeID SERIAL PRIMARY KEY NOT NULL,
-            request_id INTEGER NOT NULL REFERENCES requests(requestID),
             searcher_id INTEGER NOT NULL REFERENCES searchers(searcherID),
-            vk_id INTEGER NOT NULL UNIQUE);            
+            user_vkid INTEGER UNIQUE);            
             
             """)
 
         conn.commit()
+
 conn.close()
