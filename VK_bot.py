@@ -1,4 +1,5 @@
 import configparser
+
 import vk_api
 from random import randrange
 from vk_api.longpoll import VkLongPoll, VkEventType
@@ -9,7 +10,8 @@ import requests
 from io import BytesIO
 import re
 from datetime import datetime as dt
-from insert_tables import select_likes
+from insert_tables import insert_searchers, insert_requests, insert_dislikes, insert_likes
+
 
 
 config = configparser.ConfigParser()
@@ -107,9 +109,6 @@ def main_bot():
 			'1-женский\n '
 			'2-мужской\n '
 			'0-любой \n'
-			'\n'
-			r'Командой "\favorit" сможете увидеть список людей, которым вы поставили лайк '
-			'\n'
 			'Выбери как будем искать',
 			keyboard_welcome.get_keyboard()
 		]
@@ -130,6 +129,8 @@ def main_bot():
 			try:
 				if request == "персонализированный":
 					# message_id = event.message_id  # id сообщения пока не нужен
+					insert_searchers(user_id)
+					insert_requests(user_id)
 					write_msg(user_id, 'Сейчас найдем ...')
 					user_info = get_user_info(user_id)
 					try:
@@ -158,6 +159,10 @@ def main_bot():
 							'Ваша страница закрыта. Откройте страницу для поиска или воспользуйтесь поиском по параметрам\n',
 							keyboard=keyboard_welcome.get_keyboard())
 				elif request in ['like', 'dislike']:  # Отклик на лайк и дислайк
+					if request == 'like':
+						insert_likes(user_id, result)
+					if request == 'dislike':
+						insert_dislikes(user_id, result)	
 					result = search_result.pop(0)
 					write_msg(
 						user_id,
@@ -183,6 +188,8 @@ def main_bot():
 						request_dict.get(request)[1]
 					)
 				elif find_param_search and bool(find_param_search):  # Поиск по параметрам
+					insert_searchers(user_id)
+					insert_requests(user_id)
 					city = find_param_search.group(1)
 					sex = find_param_search.group(2)
 					age_from = find_param_search.group(3)
@@ -202,11 +209,6 @@ def main_bot():
 							f'Неверный формат сообщения для поиска или ошибка в запросе\n\n'
 							f'{request_dict.get("заданными параметрами")[0]}',
 						)
-				elif request == r'\favorit':
-					favorits = select_likes(user_id)
-					write_msg(user_id, favorits)
-
-
 				else:
 					write_msg(
 						user_id,
