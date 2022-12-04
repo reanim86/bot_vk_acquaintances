@@ -3,21 +3,28 @@
 # потом запускаем код:
 
 import psycopg2
+import configparser
 
 
-with psycopg2.connect(database="vkinder2022",
-                      user="postgres",
-                      password="Vu293893") as conn:
+config = configparser.ConfigParser()
+config.read('token.ini')
+passw = config['BD_password']['passw']
+
+
+with psycopg2.connect(
+        database="vkinder2022",
+        user="postgres",
+        password=passw) as conn:
     with conn.cursor() as cur:
         
         # Перед повторным запуском кода необходимо разкомментировать:
 
-        # cur.execute("""
-        # DROP TABLE dislikes;
-        # DROP TABLE likes;
-        # DROP TABLE requests;
+        cur.execute("""
+        DROP TABLE dislikes;
+        DROP TABLE likes;
+        DROP TABLE requests;
         
-        # """)
+        """)
 
         cur.execute("""
         CREATE TABLE IF NOT EXISTS 

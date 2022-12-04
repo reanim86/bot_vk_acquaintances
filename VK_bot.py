@@ -1,5 +1,4 @@
 import configparser
-
 import vk_api
 from random import randrange
 from vk_api.longpoll import VkLongPoll, VkEventType
@@ -10,6 +9,7 @@ import requests
 from io import BytesIO
 import re
 from datetime import datetime as dt
+from insert_tables import select_likes
 
 
 config = configparser.ConfigParser()
@@ -107,6 +107,9 @@ def main_bot():
 			'1-женский\n '
 			'2-мужской\n '
 			'0-любой \n'
+			'\n'
+			r'Командой "\favorit" сможете увидеть список людей, которым вы поставили лайк '
+			'\n'
 			'Выбери как будем искать',
 			keyboard_welcome.get_keyboard()
 		]
@@ -199,6 +202,11 @@ def main_bot():
 							f'Неверный формат сообщения для поиска или ошибка в запросе\n\n'
 							f'{request_dict.get("заданными параметрами")[0]}',
 						)
+				elif request == r'\favorit':
+					favorits = select_likes(user_id)
+					write_msg(user_id, favorits)
+
+
 				else:
 					write_msg(
 						user_id,
