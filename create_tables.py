@@ -23,7 +23,6 @@ with psycopg2.connect(
         DROP TABLE dislikes;
         DROP TABLE likes;
         DROP TABLE requests;
-        
         """)
 
         cur.execute("""
@@ -48,10 +47,8 @@ with psycopg2.connect(
             user_vkid INTEGER UNIQUE,
             name VARCHAR(40),
             surname VARCHAR(40),
-            link VARCHAR,
-            photo1_link VARCHAR,
-            photo2_link VARCHAR,
-            photo3_link VARCHAR);
+            link VARCHAR
+            );
 
         CREATE TABLE IF NOT EXISTS 
         dislikes
