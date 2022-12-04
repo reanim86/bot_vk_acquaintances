@@ -10,6 +10,8 @@ import requests
 from io import BytesIO
 import re
 from datetime import datetime as dt
+from insert_tables import insert_searchers, insert_requests, insert_dislikes, insert_likes
+
 
 
 config = configparser.ConfigParser()
@@ -127,6 +129,8 @@ def main_bot():
 			try:
 				if request == "персонализированный":
 					# message_id = event.message_id  # id сообщения пока не нужен
+					insert_searchers(user_id)
+					insert_requests(user_id)
 					write_msg(user_id, 'Сейчас найдем ...')
 					user_info = get_user_info(user_id)
 					try:
@@ -155,6 +159,10 @@ def main_bot():
 							'Ваша страница закрыта. Откройте страницу для поиска или воспользуйтесь поиском по параметрам\n',
 							keyboard=keyboard_welcome.get_keyboard())
 				elif request in ['like', 'dislike']:  # Отклик на лайк и дислайк
+					if request == 'like':
+						insert_likes(user_id, result)
+					if request == 'dislike':
+						insert_dislikes(user_id, result)	
 					result = search_result.pop(0)
 					write_msg(
 						user_id,
@@ -180,6 +188,8 @@ def main_bot():
 						request_dict.get(request)[1]
 					)
 				elif find_param_search and bool(find_param_search):  # Поиск по параметрам
+					insert_searchers(user_id)
+					insert_requests(user_id)
 					city = find_param_search.group(1)
 					sex = find_param_search.group(2)
 					age_from = find_param_search.group(3)
