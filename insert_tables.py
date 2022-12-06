@@ -82,8 +82,8 @@ def select_likes(user_id):
                             JOIN  searchers s 
                             ON l.searcher_id = s.searcherid  
                             WHERE s.vk_id = {user_id};""")
-                result = [" ".join(fav) for fav in cur.fetchall()]
-                return result
+            result = [" ".join(fav) for fav in cursor.fetchall()]
+        return result
     except Exception as error:
         print(error)  # Можно залогировать ошибки
         return
