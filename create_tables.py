@@ -17,7 +17,8 @@ with psycopg2.connect(
         password=passw) as conn:
     with conn.cursor() as cur:
         
-        # Перед повторным запуском кода необходимо разкомментировать:
+        # Перед повторным запуском кода необходимо разкомментировать,
+        # перео первым запуском закомментировать:
 
         cur.execute("""
         DROP TABLE dislikes;
