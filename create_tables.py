@@ -55,7 +55,7 @@ with psycopg2.connect(
         (
             dislikeID SERIAL PRIMARY KEY NOT NULL,
             searcher_id INTEGER NOT NULL REFERENCES searchers(searcherID),
-            user_vkid INTEGER UNIQUE);            
+            user_vkid INTEGER);            
             
             """)
 
