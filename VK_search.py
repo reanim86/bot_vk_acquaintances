@@ -45,7 +45,7 @@ def get_people(city, age_from, age_to, sex=0, count=20, offset=None):
             else:
                 continue
         return result
-    except vk_api.exceptions.ApiError or AttributeError or TypeError:
+    except vk_api.exceptions.ApiError:
         return []
 
 
@@ -115,6 +115,23 @@ def messages_search(user_id, message_id):
     for items in reversed(bot_vk.method('messages.search', params).get('items')):
         if items.get('id') == message_id:
             return items.get('text')
+
+
+def personal_search(user_id, offset=None):
+    user_info = get_user_info(user_id)
+    try:
+        city = user_info[1]
+        age_from = dt.today().year - int(user_info[2][-4:])
+        age_to = age_from
+        if user_info[3] == 1:
+            sex = 2
+        elif user_info[3] == 2:
+            sex = 1
+        search_result = get_people(city, age_from, age_to, sex, offset=offset)
+        return search_result.pop(0)
+    except Exception as error:
+        print(error)  # здесь можно залогировать ошибки или отбирать пользователей с закрытой страницей
+        return
 
 
 if __name__ == '__main__':
